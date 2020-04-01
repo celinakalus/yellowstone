@@ -14,7 +14,7 @@ For release builds with optimizations enabled and no debug information:
 
 ```Bash
 $ make release
-``
+```
 
 For verbose output during compiling and linking (maybe useful for debugging):
 
