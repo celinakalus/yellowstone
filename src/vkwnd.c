@@ -1,6 +1,8 @@
+#include <vulkan/vulkan_core.h>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "vkwnd.h"
 
@@ -29,8 +31,14 @@ SB_RESULT vkwnd_create(VulkanWindow *vkwnd, const char *appName, int major, int 
 
 	// create a window
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
 	vkwnd->window = glfwCreateWindow(width, height, appName, NULL, NULL);
+
+	if (vkwnd->window == NULL) {
+		printf("Window creation failed!\n");
+		return SB_EXIT_FAILURE;
+	}
 
 	// print info about vulkan
 	vkEnumerateInstanceExtensionProperties(NULL, &vkext, NULL);
@@ -54,6 +62,53 @@ SB_RESULT vkwnd_create(VulkanWindow *vkwnd, const char *appName, int major, int 
 		printf("Unable to create vulkan instance. Error: %i\n", result);
 		return SB_EXIT_FAILURE;
 	}
+
+	/* pick physical device */
+	uint32_t device_count = 0;
+	VkPhysicalDevice *phys_devices = NULL;
+
+	result = vkEnumeratePhysicalDevices(vkwnd->instance, &device_count, NULL);
+
+	if (result < 0) {
+		printf("Error while enumerating physical devices: %i\n", result);
+		return SB_EXIT_FAILURE;
+	}
+
+	if (device_count <= 0) {
+		printf("No physical devices found; Aborting.\n");
+		return SB_EXIT_FAILURE;
+	}
+
+	printf("Found %u physical devices:\n", device_count);
+
+	phys_devices = malloc(sizeof(VkPhysicalDevice) * device_count);
+
+	if (phys_devices == NULL) {
+		printf("Out of memory.\n");
+		return SB_EXIT_FAILURE;
+	}
+
+	result = vkEnumeratePhysicalDevices(vkwnd->instance, &device_count, phys_devices);
+
+	if (result < 0) {
+		printf("Error while enumerating physical devices: %i\n", result);
+		return SB_EXIT_FAILURE;
+	}
+
+	for (int device_i = 0; device_i < device_count; device_i++) {
+		VkPhysicalDevice device = phys_devices[device_i];
+		VkPhysicalDeviceProperties device_prop;
+		vkGetPhysicalDeviceProperties(device, &device_prop);
+		printf("  [%i] %s\n", device_i, device_prop.deviceName);
+	}
+
+	printf("Choosing first device.\n");
+
+	VkPhysicalDevice phys_device = phys_devices[0];
+	free(phys_devices);
+	(void)phys_devices;
+
+	printf("Vulkan window created successfully.\n");
 
 	return SB_EXIT_SUCCESS;
 }
