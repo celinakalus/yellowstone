@@ -1,6 +1,9 @@
 # Yellowstone
 
-Vulkan-based game engine
+WIP Vulkan application. Aim is to create a simple example application
+from scratch and develop further from there. The Tutorial at
+[vulkan-tutorial.com](https://vulkan-tutorial.com/en/Overview) is used
+as a reference.
 
 ## Targets
 
