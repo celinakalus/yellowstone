@@ -4,10 +4,6 @@ CCFLAGS := -c
 LDFLAGS := 
 
 
-# local headers
-INCLUDE += ./include
-
-
 # libraries and headers vor Vulkan
 INCLUDE += $(VULKAN_SDK)/include
 LIBPATHS += $(VULKAN_SDK)/lib
