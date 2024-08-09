@@ -12,10 +12,12 @@ LIBRARIES += vulkan
 
 # add libraries and headers to flags
 CCFLAGS += $(foreach dir,$(INCLUDE),-I$(dir))
-LDFLAGS += $(foreach dir,$(INCLUDE),-I$(dir)) 
+LDFLAGS += $(foreach dir,$(INCLUDE),-I$(dir))
 LDFLAGS += $(foreach dir,$(LIBPATHS),-L$(dir))
 LDFLAGS += $(foreach lib,$(LIBRARIES),-l$(lib))
 
+
+CCFLAGS += -Wpedantic -Wall -Wextra
 
 # libraries for GLFW 3
 LDFLAGS += $(shell pkg-config --static --libs glfw3)

@@ -5,6 +5,9 @@
 #include "vkwnd.h"
 
 int main(int argc, char **argv) {
+	(void)argc;
+	(void)argv;
+
 	VulkanWindow vkwnd;
 
 	vkwnd_create(&vkwnd, "vulkan_test", 1, 0, 0, 800, 600);
