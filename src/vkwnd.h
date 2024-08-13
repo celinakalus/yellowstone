@@ -12,6 +12,7 @@ typedef struct {
 	VkPhysicalDevice phys_device;
 	VkDevice log_device;
 	VkQueue graphics_queue;
+	VkSurfaceKHR surface;
 } VulkanWindow;
 
 SB_RESULT vkwnd_create(VulkanWindow *vkwnd, const char *appName, int major, int minor, int build, int width, int height);

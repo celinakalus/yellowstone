@@ -1,4 +1,5 @@
 #include "defines.h"
+#include <KHR/khrplatform.h>
 #include <stdint.h>
 #include <vulkan/vulkan_core.h>
 #define GLFW_INCLUDE_VULKAN
@@ -65,6 +66,16 @@ SB_RESULT vkwnd_create(VulkanWindow *vkwnd, const char *appName, int major, int 
 		return SB_EXIT_FAILURE;
 	}
 
+	/* Create window surface*/
+	result = glfwCreateWindowSurface(vkwnd->instance, vkwnd->window, NULL, &(vkwnd->surface));
+
+	if (result != VK_SUCCESS) {
+		printf("Error while creating window surface: %i\n", result);
+		return SB_EXIT_FAILURE;
+	}
+
+	printf("Window surface created.\n");
+
 	/* pick physical device */
 	uint32_t device_count = 0;
 	VkPhysicalDevice *phys_devices = NULL;
@@ -110,7 +121,7 @@ SB_RESULT vkwnd_create(VulkanWindow *vkwnd, const char *appName, int major, int 
 	free(phys_devices);
 	(void)phys_devices;
 
-	VkQueueFamilyProperties *queue_prop;
+	VkQueueFamilyProperties *queue_prop = NULL;
 	uint32_t queue_count = 0;
 
 	vkGetPhysicalDeviceQueueFamilyProperties(vkwnd->phys_device, &queue_count, NULL);
@@ -120,10 +131,22 @@ SB_RESULT vkwnd_create(VulkanWindow *vkwnd, const char *appName, int major, int 
 
 	int queue_chosen = -1;
 	for (int i = 0; i < (long)queue_count; i++) {
-		if (queue_prop[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-			queue_chosen = i;
-			break;
+		/* First check graphics capability */
+		if ((queue_prop[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0) {
+			continue;
 		}
+
+		/* Second check presenting capability */
+		VkBool32 surface_supp;
+		vkGetPhysicalDeviceSurfaceSupportKHR(vkwnd->phys_device, i, vkwnd->surface, &surface_supp);
+
+		if (surface_supp == KHRONOS_FALSE) {
+			continue;
+		}
+
+		/* If both supported, choose queue */
+		queue_chosen = i;
+		break;
 	}
 
 	if (queue_chosen < 0) {
@@ -157,14 +180,17 @@ SB_RESULT vkwnd_create(VulkanWindow *vkwnd, const char *appName, int major, int 
 		printf("Failed to create logical device: %i\n", result);
 	}
 
-	printf("Vulkan window created successfully.\n");
+	printf("Logical device created.\n");
 
 	vkGetDeviceQueue(vkwnd->log_device, queue_chosen, 0, &(vkwnd->graphics_queue));
+
+	printf("Vulkan window created successfully.\n");
 
 	return SB_EXIT_SUCCESS;
 }
 
 void vkwnd_destroy(VulkanWindow *vkwnd) {
+	vkDestroySurfaceKHR(vkwnd->instance, vkwnd->surface, NULL);
 	vkDestroyDevice(vkwnd->log_device, NULL);
 	vkDestroyInstance(vkwnd->instance, NULL);
 	glfwDestroyWindow(vkwnd->window);
